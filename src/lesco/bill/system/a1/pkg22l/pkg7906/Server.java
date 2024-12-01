@@ -50,7 +50,7 @@ class ClientHandler implements Runnable {
 
     private synchronized String handleRequest(String request) {
         String[] parts = request.split(",");
-        String command = parts[0];
+        String command = parts[1];
 
         try {
             switch (command) {

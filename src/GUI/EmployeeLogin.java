@@ -1,22 +1,23 @@
 package GUI;
 
-import Controller.EmployeeController;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class EmployeeLogin extends JFrame {
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
-    private EmployeeController employeeController;
+    private ClientSocket client;
 
-    public EmployeeLogin() {
-        employeeController = new EmployeeController();
-
+    public EmployeeLogin()
+    {
         setTitle("LESCO BILLING SYSTEM - Employee Login");
-        setSize(1000, 700); 
+        setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
@@ -36,31 +37,16 @@ public class EmployeeLogin extends JFrame {
         backButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 dispose();
-                new RoleSelection(); 
+                new RoleSelection();
             }
         });
         headerPanel.add(backButton);
-
-        // Add "Identify Yourself" Label to the Header Panel
-       
 
         JLabel headerLabel = new JLabel("LESCO BILLING SYSTEM");
         headerLabel.setForeground(Color.YELLOW);
         headerLabel.setFont(new Font("Arial", Font.BOLD, 30));
         headerLabel.setBounds(300, 50, 500, 50);
         headerPanel.add(headerLabel);
-
-        JLabel titleLabel = new JLabel("Employee Login");
-        titleLabel.setFont(new Font("Arial", Font.BOLD, 26));
-        titleLabel.setForeground(Color.BLACK);
-        titleLabel.setBounds(400, 120, 300, 50);
-        headerPanel.add(titleLabel);
-        
-         JLabel identifyLabel = new JLabel("Identify Yourself");
-        identifyLabel.setForeground(Color.BLACK);
-        identifyLabel.setFont(new Font("Arial", Font.BOLD, 40));
-        identifyLabel.setBounds(350, 150, 500, 50);
-        add(identifyLabel);
 
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new GridBagLayout());
@@ -112,22 +98,34 @@ public class EmployeeLogin extends JFrame {
         formPanel.add(loginButton, gbc);
 
         loginButton.addActionListener(new ActionListener() {
+            private ClientSocket client;
+
             @Override
             public void actionPerformed(ActionEvent e) {
                 String username = usernameField.getText();
                 String password = new String(passwordField.getPassword());
 
-                boolean loginSuccessful = employeeController.LOGIN_EMPLOYEE(username, password);
+                try {
+                    // Send login request to server
+                    String request = "Employee,LOGIN," + username + "," + password;
+                    this.client = ClientSocket.getInstance(); // Get singleton instance
+                    String response = client.sendRequest(request); // Send request and get response
 
-                if (loginSuccessful) {
-                    JOptionPane.showMessageDialog(null, "Login Successful!");
-                    dispose();
-                    new EmployeeDashboardGUI(username);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Invalid Username or Password", "Login Error", JOptionPane.ERROR_MESSAGE);
+                    // Process server response
+                    if ("Login successful.".equals(response)) {
+                        JOptionPane.showMessageDialog(null, "Login Successful!");
+                        dispose();
+                        new EmployeeDashboardGUI(username);
+                    } else {
+                        JOptionPane.showMessageDialog(null, response, "Login Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (IOException | ClassNotFoundException ex) {
+                    ex.printStackTrace();
+                    JOptionPane.showMessageDialog(null, "Error connecting to the server. Please try again.", "Connection Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         });
+
 
         setLayout(new BorderLayout());
         add(headerPanel, BorderLayout.NORTH);
