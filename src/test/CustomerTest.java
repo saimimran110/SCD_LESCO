@@ -31,8 +31,7 @@ public class CustomerTest {
     @AfterEach
     void cleanup() throws IOException {
         // Clean up temporary files
-        Files.deleteIfExists(tempCustomerFile);
-        Files.deleteIfExists(tempNadraFile);
+
     }
 
     @Test

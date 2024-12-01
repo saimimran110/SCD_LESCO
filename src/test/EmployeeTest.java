@@ -37,10 +37,8 @@ public class EmployeeTest {
 
     @AfterEach
     void cleanup() throws IOException {
-        // Clean up temporary files
-        Files.deleteIfExists(tempEmployeeFile);
-        Files.deleteIfExists(tempBillingFile);
-        Files.deleteIfExists(tempCustomerFile);
+
+
     }
 
     @Test
