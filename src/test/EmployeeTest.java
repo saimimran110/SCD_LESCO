@@ -8,18 +8,38 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class EmployeeTest {
+public class EmployeeTest
+{
 
     private Path tempEmployeeFile;
     private Path tempBillingFile;
     private Path tempCustomerFile;
 
+    private Path employeeBackupFile;
+    private Path billingBackupFile;
+    private Path customerBackupFile;
+
     @BeforeEach
     void setup() throws IOException {
-        // Create temporary files for testing
+        // Define paths for temporary files
         tempEmployeeFile = Paths.get("EmployeeData.txt");
         tempBillingFile = Paths.get("BillingInfo.txt");
         tempCustomerFile = Paths.get("CustomerInfo.txt");
+
+        // Backup original files if they exist
+        employeeBackupFile = tempEmployeeFile.resolveSibling("EmployeeData_backup.txt");
+        billingBackupFile = tempBillingFile.resolveSibling("BillingInfo_backup.txt");
+        customerBackupFile = tempCustomerFile.resolveSibling("CustomerInfo_backup.txt");
+
+        if (Files.exists(tempEmployeeFile)) {
+            Files.move(tempEmployeeFile, employeeBackupFile);
+        }
+        if (Files.exists(tempBillingFile)) {
+            Files.move(tempBillingFile, billingBackupFile);
+        }
+        if (Files.exists(tempCustomerFile)) {
+            Files.move(tempCustomerFile, customerBackupFile);
+        }
 
         // Write initial data to the temporary files
         Files.write(tempEmployeeFile, Arrays.asList(
@@ -36,17 +56,29 @@ public class EmployeeTest {
     }
 
     @AfterEach
-    void cleanup() throws IOException {
+    void cleanup() throws IOException
+    {
+        // Delete temporary files
+        Files.deleteIfExists(tempEmployeeFile);
+        Files.deleteIfExists(tempBillingFile);
+        Files.deleteIfExists(tempCustomerFile);
 
-
+        // Restore original files from backups
+        if (Files.exists(employeeBackupFile)) {
+            Files.move(employeeBackupFile, tempEmployeeFile);
+        }
+        if (Files.exists(billingBackupFile)) {
+            Files.move(billingBackupFile, tempBillingFile);
+        }
+        if (Files.exists(customerBackupFile)) {
+            Files.move(customerBackupFile, tempCustomerFile);
+        }
     }
 
     @Test
     void testAddEmployeeInFileSuccess() {
         boolean result = Employee.addEmployeeInFile("Talha", "newpassword123");
         assertFalse(result, "Yes Employee Already Exists");
-
-
     }
 
     @Test
@@ -86,6 +118,7 @@ public class EmployeeTest {
         boolean result = Employee.updatePassword("Saim", "wrongpassword", "newsecurepassword");
         assertFalse(result, "Password update should fail for incorrect current password.");
     }
+
     @Test
     void testUpdateTheBillStatusAfterBillingSuccess() {
         // Define the expected line as a string
@@ -114,5 +147,4 @@ public class EmployeeTest {
             fail("IOException occurred while verifying the file: " + e.getMessage());
         }
     }
-
 }

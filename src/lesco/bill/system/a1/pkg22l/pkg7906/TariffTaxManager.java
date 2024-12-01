@@ -28,10 +28,10 @@ public class TariffTaxManager {
     // Method to reset file to default values (4 rows)
     private static void resetFile() {
         String[] defaultContent = {
-            "Single Phase,5,,17,150",
-            "Single Phase,15,,20,250",
-            "Three Phase,8,12,17,150",
-            "Three Phase,18,25,20,250"
+                "Single Phase,5,,17,150",
+                "Single Phase,15,,20,250",
+                "Three Phase,8,12,17,150",
+                "Three Phase,18,25,20,250"
         };
         try (FileWriter writer = new FileWriter(TARIF_TAX_FILE)) {
             for (String line : defaultContent) {
@@ -44,78 +44,76 @@ public class TariffTaxManager {
     }
 
     // Method to update tariff/tax information
-  // Method to update tariff/tax information
-public static void updateTariffTaxInfo() {
-    Scanner scanner = new Scanner(System.in);
+    // Method to update tariff/tax information
+    public static void updateTariffTaxInfo() {
+        Scanner scanner = new Scanner(System.in);
 
-    // Ensure file has exactly 4 rows
-    ensureFourRows();
+        // Ensure file has exactly 4 rows
+        ensureFourRows();
 
-    // Prompt user for input
-    int meterTypeOption = 0;
-    while (meterTypeOption != 1 && meterTypeOption != 2) {
-        System.out.println("Select Meter Type:");
-        System.out.println("1. Single Phase");
-        System.out.println("2. Three Phase");
-        if (scanner.hasNextInt()) {
-            meterTypeOption = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
-        } else {
-            System.out.println("Invalid input. Please enter 1 or 2.");
-            scanner.nextLine(); // Clear invalid input
+        // Prompt user for input
+        int meterTypeOption = 0;
+        while (meterTypeOption != 1 && meterTypeOption != 2) {
+            System.out.println("Select Meter Type:");
+            System.out.println("1. Single Phase");
+            System.out.println("2. Three Phase");
+            if (scanner.hasNextInt()) {
+                meterTypeOption = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+            } else {
+                System.out.println("Invalid input. Please enter 1 or 2.");
+                scanner.nextLine(); // Clear invalid input
+            }
         }
-    }
 
-    String meterType = meterTypeOption == 1 ? "Single Phase" : "Three Phase";
+        String meterType = meterTypeOption == 1 ? "Single Phase" : "Three Phase";
 
-    // Select customer type
-    int customerTypeOption = 0;
-    while (customerTypeOption != 1 && customerTypeOption != 2) {
-        System.out.println("Select Customer Type:");
-        System.out.println("1. Domestic");
-        System.out.println("2. Commercial");
-        if (scanner.hasNextInt()) {
-            customerTypeOption = scanner.nextInt();
-            scanner.nextLine(); // Consume newline
-        } else {
-            System.out.println("Invalid input. Please enter 1 or 2.");
-            scanner.nextLine(); // Clear invalid input
+        // Select customer type
+        int customerTypeOption = 0;
+        while (customerTypeOption != 1 && customerTypeOption != 2) {
+            System.out.println("Select Customer Type:");
+            System.out.println("1. Domestic");
+            System.out.println("2. Commercial");
+            if (scanner.hasNextInt()) {
+                customerTypeOption = scanner.nextInt();
+                scanner.nextLine(); // Consume newline
+            } else {
+                System.out.println("Invalid input. Please enter 1 or 2.");
+                scanner.nextLine(); // Clear invalid input
+            }
         }
+
+        String customerType = customerTypeOption == 1 ? "Domestic" : "Commercial";
+
+        // Determine row index
+        int row = getRowIndex(meterType, customerType);
+
+        // Collect new values
+        System.out.println("Enter new Regular Unit Price:");
+        String regularUnitPrice = scanner.nextLine();
+
+        String peakHourUnitPrice = "";
+        if (meterType.equals("Single Phase")) {
+            System.out.println("Peak hour unit price is not applicable for Single Phase meters. Setting it to empty.");
+        } else {
+            System.out.println("Enter new Peak Hour Unit Price:");
+            peakHourUnitPrice = scanner.nextLine();
+        }
+
+        System.out.println("Enter new Tax Percentage:");
+        String taxPercentage = scanner.nextLine();
+
+        System.out.println("Enter new Fixed Charges:");
+        String fixedCharges = scanner.nextLine();
+
+        String newEntry = String.format("%s,%s,%s,%s,%s",
+                meterType, regularUnitPrice, peakHourUnitPrice, taxPercentage, fixedCharges);
+
+        // Update the file with new entry
+        updateFileRow(row, newEntry);
+
+
     }
-
-    String customerType = customerTypeOption == 1 ? "Domestic" : "Commercial";
-
-    // Determine row index
-    int row = getRowIndex(meterType, customerType);
-
-    // Collect new values
-    System.out.println("Enter new Regular Unit Price:");
-    String regularUnitPrice = scanner.nextLine();
-
-    String peakHourUnitPrice = "";
-    if (meterType.equals("Single Phase")) {
-        System.out.println("Peak hour unit price is not applicable for Single Phase meters. Setting it to empty.");
-    } else {
-        System.out.println("Enter new Peak Hour Unit Price:");
-        peakHourUnitPrice = scanner.nextLine();
-    }
-
-    System.out.println("Enter new Tax Percentage:");
-    String taxPercentage = scanner.nextLine();
-
-    System.out.println("Enter new Fixed Charges:");
-    String fixedCharges = scanner.nextLine();
-
-    String newEntry = String.format("%s,%s,%s,%s,%s",
-            meterType, regularUnitPrice, peakHourUnitPrice, taxPercentage, fixedCharges);
-
-    // Update the file with new entry
-    updateFileRow(row, newEntry);
-
-    
-}
-
-
 
     // Determine row index based on meter and customer type
     public static int getRowIndex(String meterType, String customerType) {
@@ -161,20 +159,20 @@ public static void updateTariffTaxInfo() {
     }
 
     public static String getRowContent(int row) {
-    File file = new File(TARIF_TAX_FILE);
-    try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-        String line;
-        int currentRow = 1;
-        while ((line = reader.readLine()) != null) {
-            if (currentRow == row) {
-                return line;  // Return the content of the specified row
+        File file = new File(TARIF_TAX_FILE);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            int currentRow = 1;
+            while ((line = reader.readLine()) != null) {
+                if (currentRow == row) {
+                    return line;  // Return the content of the specified row
+                }
+                currentRow++;
             }
-            currentRow++;
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-    } catch (IOException e) {
-        e.printStackTrace();
+        return "";  // Return an empty string if the row is not found
     }
-    return "";  // Return an empty string if the row is not found
-}
 
 }
