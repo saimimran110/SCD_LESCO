@@ -55,13 +55,11 @@ class ClientHandler implements Runnable {
         try {
             switch (command) {
                 case "LOGIN":
-                    return handleLogin(parts);
+                    return handleLogin(parts); // Modified to support employee login
                 case "GENERATE_BILL":
                     return handleGenerateBill(parts);
                 case "UPDATE_TARIFF":
                     return handleUpdateTariff();
-                case "VIEW_BILLS":
-                    //return handleViewBills(parts);
                 case "VIEW_CNIC_EXPIRIES":
                     return handleViewCnicExpiries();
                 default:
@@ -74,26 +72,23 @@ class ClientHandler implements Runnable {
     }
 
     private String handleLogin(String[] parts) {
+        // Added proper implementation for employee login handling
         if (parts.length < 4) {
             return "Invalid LOGIN command. Expected format: LOGIN,<userType>,<username>,<password>";
         }
 
-        String userType = parts[1];
+        String userType = parts[0]; // Fixed to properly identify the userType from the request
         String username = parts[2];
         String password = parts[3];
-        boolean loginSuccess;
 
-        if ("EMPLOYEE".equalsIgnoreCase(userType)) {
-            loginSuccess = Employee.employeeLogin(username, password);
-        } else if ("CUSTOMER".equalsIgnoreCase(userType)) {
-            loginSuccess = Customer.loginForCustomer(username, password);
-        } else {
-            return "Invalid user type. Use EMPLOYEE or CUSTOMER.";
+        if ("Employee".equalsIgnoreCase(userType)) {
+            boolean loginSuccess = Employee.employeeLogin(username, password);
+            return loginSuccess ? "Login successful." : "Invalid username or password.";
         }
 
-        return loginSuccess ? "Login successful." : "Invalid credentials.";
+        // Customer login can be implemented here if needed in the future
+        return "Unsupported user type for login: " + userType;
     }
-
 
     private String handleGenerateBill(String[] parts) {
         String customerId = parts[1];
@@ -105,21 +100,6 @@ class ClientHandler implements Runnable {
         TariffTaxManager.updateTariffTaxInfo();
         return "Tariff updated successfully.";
     }
-/*
-    private String handleViewBills(String[] parts) {
-        String customerId = parts[1];
-        ArrayList<BillingInfo> bills = BillingInfo.viewBills(customerId);
-        if (bills.isEmpty()) {
-            return "No bills found for customer ID: " + customerId;
-        }
-
-        StringBuilder response = new StringBuilder();
-        for (BillingInfo bill : bills) {
-            response.append(bill.toString()).append("\n");
-        }
-        return response.toString();
-    }
- */
 
     private String handleViewCnicExpiries() {
         ArrayList<Customer> expiringCnicList = Employee.viewExpiringCNICs();
@@ -134,4 +114,3 @@ class ClientHandler implements Runnable {
         return response.toString();
     }
 }
-

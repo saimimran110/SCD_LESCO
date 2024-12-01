@@ -12,10 +12,9 @@ public class EmployeeLogin extends JFrame {
     private JTextField usernameField;
     private JPasswordField passwordField;
     private JButton loginButton;
-    private ClientSocket client;
 
-    public EmployeeLogin()
-    {
+
+    public EmployeeLogin() {
         setTitle("LESCO BILLING SYSTEM - Employee Login");
         setSize(1000, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -98,8 +97,6 @@ public class EmployeeLogin extends JFrame {
         formPanel.add(loginButton, gbc);
 
         loginButton.addActionListener(new ActionListener() {
-            private ClientSocket client;
-
             @Override
             public void actionPerformed(ActionEvent e) {
                 String username = usernameField.getText();
@@ -108,7 +105,7 @@ public class EmployeeLogin extends JFrame {
                 try {
                     // Send login request to server
                     String request = "Employee,LOGIN," + username + "," + password;
-                    this.client = ClientSocket.getInstance(); // Get singleton instance
+                    ClientSocket client = ClientSocket.getInstance(); // Get singleton instance
                     String response = client.sendRequest(request); // Send request and get response
 
                     // Process server response
