@@ -9,6 +9,7 @@ import java.awt.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import lesco.bill.system.a1.pkg22l.pkg7906.BillingInfo;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
 
 public class PaidUnpaidBillsGUI {
 
@@ -134,30 +135,49 @@ public class PaidUnpaidBillsGUI {
     }
 
     private void loadBillData(String customerId) {
-        EmployeeController ec = new EmployeeController();
-        bills = ec.VIEW_PAID_UNPAID_BILLS(customerId); // Load bills
+        try {
+            // Send the request to the server
+            String request = String.format("Employee,VIEW_PAID_UNPAID_BILLS,%s", customerId);
+            ClientSocket client = ClientSocket.getInstance();
+            String response = client.sendRequest(request);
 
-        if (bills != null && !bills.isEmpty()) {
-            filteredBills = new ArrayList<>(bills); // Initialize filteredBills with all bills
+            if (response.startsWith("Error") || response.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "No bills found for the given Customer ID.", "Information", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                bills = parseBills(response); // Parse the response into a list of BillingInfo
+                filteredBills = new ArrayList<>(bills); // Initialize filteredBills with all bills
 
-            // Sort bills by reading date (latest first)
-            bills.sort((bill1, bill2) -> {
-                SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
-                try {
-                    Date readingDate1 = dateFormat.parse(bill1.getReadingEntryDate());
-                    Date readingDate2 = dateFormat.parse(bill2.getReadingEntryDate());
-                    return readingDate2.compareTo(readingDate1); // Latest date first
-                } catch (Exception e) {
-                    return 0;
-                }
-            });
+                // Sort bills by reading date (latest first)
+                bills.sort((bill1, bill2) -> {
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                    try {
+                        Date readingDate1 = dateFormat.parse(bill1.getReadingEntryDate());
+                        Date readingDate2 = dateFormat.parse(bill2.getReadingEntryDate());
+                        return readingDate2.compareTo(readingDate1); // Latest date first
+                    } catch (Exception e) {
+                        return 0;
+                    }
+                });
 
-            // Add the sorted bills to the table
-            displayBills(filteredBills);
-        } else {
-            JOptionPane.showMessageDialog(frame, "No bills found for the given Customer ID.", "Information", JOptionPane.INFORMATION_MESSAGE);
+                // Add the sorted bills to the table
+                displayBills(filteredBills);
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(frame, "Failed to connect to the server. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
+
+    private ArrayList<BillingInfo> parseBills(String response)
+    {
+        ArrayList<BillingInfo> bills = new ArrayList<>();
+        String[] billEntries = response.split(";"); // Assuming bills are separated by ";"
+        for (String entry : billEntries) {
+            bills.add(BillingInfo.fromString(entry)); // Assuming BillingInfo has a static fromString method
+        }
+        return bills;
+    }
+
 
     private void displayBills(ArrayList<BillingInfo> billsToDisplay) {
         tableModel.setRowCount(0); // Clear the table before displaying new data
@@ -200,19 +220,30 @@ public class PaidUnpaidBillsGUI {
             // Get the latest bill based on the reading date
             BillingInfo latestBill = bills.get(0); // The first bill is the latest due to sorting
 
-            // Print the reading date of the latest bill to the console
-            System.out.println("The reading date of the removed bill is: " + latestBill.getReadingEntryDate());
-            cc.RemoveBill(latestBill.getReadingEntryDate());
-            // Remove the latest bill from the table and the bills list
-            bills.remove(0); // Remove the latest bill from the list
-            tableModel.removeRow(0); // Remove the corresponding row from the table
+            try {
+                // Send the request to the server to remove the bill
+                String request = String.format("Employee,REMOVE_LATEST_BILL,%s", latestBill.getReadingEntryDate());
+                ClientSocket client = ClientSocket.getInstance();
+                String response = client.sendRequest(request);
 
-            // Optionally, you can show a confirmation dialog that the bill was removed
-            JOptionPane.showMessageDialog(frame, "Latest bill removed successfully.", "Information", JOptionPane.INFORMATION_MESSAGE);
+                if ("Bill removed successfully.".equalsIgnoreCase(response)) {
+                    // Remove the latest bill from the table and the bills list
+                    bills.remove(0);
+                    tableModel.removeRow(0);
+
+                    JOptionPane.showMessageDialog(frame, response, "Information", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(frame, response, "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(frame, "Failed to connect to the server. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+            }
         } else {
             JOptionPane.showMessageDialog(frame, "No bills available to remove.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
     // Custom renderer to show bill status in different colors
     private class BillStatusRenderer extends DefaultTableCellRenderer {

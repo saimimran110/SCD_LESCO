@@ -7,6 +7,8 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
 import java.util.ArrayList;
+
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
 import lesco.bill.system.a1.pkg22l.pkg7906.Customer;
 
 public class ExpiringCNICGUI {
@@ -133,26 +135,39 @@ public class ExpiringCNICGUI {
         frame.setVisible(true);
     }
 
-    // Method to load the data into the table
-    public void loadExpiringCNICs() {
-        // Fetch the list of expiring customers
-        EmployeeController controller = new EmployeeController();
-        ArrayList<Customer> customers = controller.VIEW_EXPIRING_CNIC();
 
-        // Check if the list is not empty
-        if (customers != null && !customers.isEmpty()) {
-            // Loop through the list and add each customer to the table model
-            for (Customer customer : customers) {
-                tableModel.addRow(new Object[]{
-                        customer.getCustomerId(),
-                        customer.getName(),
-                        customer.getCnic(),
-                        customer.getAddress(),
-                        customer.getPhoneNum()
-                });
+    public void loadExpiringCNICs() {
+        try {
+
+            String request = "Employee,VIEW_CNIC_EXPIRES";
+
+            // Send the request to the server and receive the response
+            ClientSocket client = ClientSocket.getInstance(); // Singleton for client communication
+            String response = client.sendRequest(request);
+
+            if (response.startsWith("Error")) {
+                JOptionPane.showMessageDialog(frame, response, "Information", JOptionPane.INFORMATION_MESSAGE);
+                return;
             }
-        } else {
-            JOptionPane.showMessageDialog(frame, "No expiring CNICs found.", "Information", JOptionPane.INFORMATION_MESSAGE);
+
+            // Parse the response and populate the table
+            String[] customers = response.split(";");
+            for (String customerData : customers) {
+                if (!customerData.isEmpty()) {
+                    String[] customerDetails = customerData.split(",");
+                    tableModel.addRow(new Object[]{
+                            customerDetails[0], // Customer ID
+                            customerDetails[1], // Name
+                            customerDetails[2], // CNIC
+                            customerDetails[3], // Address
+                            customerDetails[4]  // Phone Number
+                    });
+                }
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(frame, "Error loading expiring CNICs: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
         }
     }
+
 }

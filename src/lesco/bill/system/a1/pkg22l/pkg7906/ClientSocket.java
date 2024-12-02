@@ -21,7 +21,7 @@ public class ClientSocket
             this.in = new ObjectInputStream(socket.getInputStream());
         } catch (IOException e) {
             System.err.println("Failed to connect to the server: " + e.getMessage());
-            throw e; // Rethrow exception to notify callers
+            throw e;
         }
     }
 
@@ -33,10 +33,9 @@ public class ClientSocket
         return instance;
     }
 
-    // Send request to server and receive response
     public String sendRequest(String request) throws IOException, ClassNotFoundException {
         try {
-            out.writeObject(request); // Send the request
+            out.writeObject(request);
             return (String) in.readObject(); // Receive the response
         } catch (IOException | ClassNotFoundException e) {
             System.err.println("Error during communication: " + e.getMessage());

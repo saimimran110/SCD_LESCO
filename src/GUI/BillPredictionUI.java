@@ -1,6 +1,8 @@
 package GUI;
 
 import Controller.CustomerController;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
+
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
@@ -213,18 +215,44 @@ public class BillPredictionUI extends JFrame {
             int regularUnits = Integer.parseInt(regularUnitStr);
             int peakUnits = threePhaseRadio.isSelected() ? Integer.parseInt(peakUnitStr) : 0;
 
-            ArrayList<String> predictionResult = cc.PRIDICT_BILL(id, regularUnits, peakUnits);
+            // Show the loading screen
+            loading loadingScreen = new loading("Predicting Bill...");
 
-            resultArea.setText("");
-            for (String line : predictionResult) {
-                if (!line.equals("false") && !line.equals("true")) {
-                    resultArea.append(line + "\n");
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                @Override
+                protected Void doInBackground() throws Exception {
+                    Thread.sleep(1500); // Simulate delay
+
+                    String request = String.format("Customer,PREDICT_BILL,%s,%d,%d", id, regularUnits, peakUnits);
+                    try {
+                        ClientSocket client = ClientSocket.getInstance(); // Get singleton instance
+                        String response = client.sendRequest(request);    // Send request and get response
+
+                        loadingScreen.dispose(); // Close loading screen
+
+                        // Process the server response
+                        SwingUtilities.invokeLater(() -> {
+                            resultArea.setText(""); // Clear previous results
+                            String[] lines = response.split("\n");
+                            for (String line : lines) {
+                                resultArea.append(line + "\n");
+                            }
+                        });
+
+                    } catch (Exception ex) {
+                        loadingScreen.dispose(); // Close loading screen
+                        JOptionPane.showMessageDialog(BillPredictionUI.this, "Error connecting to the server.", "Connection Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                    return null;
                 }
-            }
+            };
+            worker.execute();
+
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Please enter valid numbers for units.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
+
 
 
 }

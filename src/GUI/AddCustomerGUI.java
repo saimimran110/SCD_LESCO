@@ -1,6 +1,7 @@
 package GUI;
 
-import Controller.CustomerController;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
+
 import javax.swing.*;
 import java.awt.*;
 import java.text.SimpleDateFormat;
@@ -10,10 +11,8 @@ public class AddCustomerGUI extends JFrame {
     private JTextField cnicField, nameField, addressField, phoneNumField;
     private JRadioButton commercialRadio, domesticRadio, singlePhaseRadio, threePhaseRadio;
     private JButton submitButton, cancelButton;
-    private CustomerController cc;
 
     public AddCustomerGUI() {
-        cc = new CustomerController();
         setTitle("Add New Customer");
         setSize(600, 500);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -90,6 +89,52 @@ public class AddCustomerGUI extends JFrame {
         setVisible(true);
     }
 
+    private void submitCustomer() {
+        String cnic = cnicField.getText();
+        String name = nameField.getText();
+        String address = addressField.getText();
+        String phoneNum = phoneNumField.getText();
+        String customerType = commercialRadio.isSelected() ? "Commercial" : "Domestic";
+        String meterType = singlePhaseRadio.isSelected() ? "Single Phase" : "Three Phase";
+
+        if (cnic.isEmpty() || name.isEmpty() || address.isEmpty() || phoneNum.isEmpty() ||
+                (!commercialRadio.isSelected() && !domesticRadio.isSelected()) ||
+                (!singlePhaseRadio.isSelected() && !threePhaseRadio.isSelected())) {
+            JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Show the loading screen
+        loading loadingScreen = new loading("Adding Customer");
+
+        SwingWorker<Void, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Void doInBackground() throws Exception {
+                Thread.sleep(1500);  // Simulate delay
+                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
+                String connectionDate = sdf.format(new Date());
+
+                String request = String.format("Customer,CUSTOMER_ADD,%s,%s,%s,%s,%s,%s,%s",
+                        cnic, name, address, phoneNum, customerType, meterType, connectionDate);
+
+                ClientSocket client = ClientSocket.getInstance();
+                String response = client.sendRequest(request);
+
+                loadingScreen.dispose(); // Close loading screen
+
+                if ("Customer added successfully.".equals(response)) {
+                    JOptionPane.showMessageDialog(AddCustomerGUI.this, "Customer added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
+                    dispose();
+                } else {
+                    JOptionPane.showMessageDialog(AddCustomerGUI.this, response, "Error", JOptionPane.ERROR_MESSAGE);
+                }
+
+                return null;
+            }
+        };
+        worker.execute();
+    }
+
     private void addLabelAndField(JPanel panel, GridBagConstraints gbc, String labelText, JTextField field) {
         gbc.gridx = 0;
         gbc.gridy++;
@@ -129,66 +174,5 @@ public class AddCustomerGUI extends JFrame {
         button.setBackground(Color.YELLOW);
         button.setForeground(Color.BLACK);
         button.setFont(new Font("Arial", Font.BOLD, 14));
-    }
-
-    private void submitCustomer() {
-        String cnic = cnicField.getText();
-        String name = nameField.getText();
-        String address = addressField.getText();
-        String phoneNum = phoneNumField.getText();
-        String customerType = commercialRadio.isSelected() ? "Commercial" : "Domestic";
-        String meterType = singlePhaseRadio.isSelected() ? "Single Phase" : "Three Phase";
-        System.out.println(cnic);
-        if (cnic.isEmpty() || name.isEmpty() || address.isEmpty() || phoneNum.isEmpty() ||
-            (!commercialRadio.isSelected() && !domesticRadio.isSelected()) ||
-            (!singlePhaseRadio.isSelected() && !threePhaseRadio.isSelected())) {
-            JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-
-        // Show the loading screen
-        loading loadingScreen = new loading("Adding Customer!!");
-
-        // Use SwingWorker to handle the submission process in the background
-        SwingWorker<Integer, Void> worker = new SwingWorker<Integer, Void>() {
-            @Override
-            protected Integer doInBackground() throws Exception {
-               
-                Thread.sleep(1500);  
-                SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
-                String connectionDate = sdf.format(new Date());
-                return cc.ADD_CUSTOMER(cnic, name, address, phoneNum, customerType, meterType, connectionDate);
-            }
-
-            @Override
-            protected void done() {
-                try {
-                    int result = get(); 
-                    loadingScreen.dispose(); 
-
-                    switch (result) {
-                        case 0:
-                            JOptionPane.showMessageDialog(AddCustomerGUI.this, "Customer added successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-                            dispose();
-                            break;
-                        case 1:
-                            JOptionPane.showMessageDialog(AddCustomerGUI.this, "CNIC not valid!!!", "Error", JOptionPane.ERROR_MESSAGE);
-                            break;
-                        case 2:
-                            JOptionPane.showMessageDialog(AddCustomerGUI.this, "Not Allowed! Maximum 3 meters allowed per CNIC.", "Error", JOptionPane.ERROR_MESSAGE);
-                            break;
-                        case 3:
-                            JOptionPane.showMessageDialog(AddCustomerGUI.this, "Error while adding customer. Please try again.", "Error", JOptionPane.ERROR_MESSAGE);
-                            break;
-                        default:
-                            JOptionPane.showMessageDialog(AddCustomerGUI.this, "Unknown error.", "Error", JOptionPane.ERROR_MESSAGE);
-                            break;
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-            }
-        };
-        worker.execute(); // Start the background processing
     }
 }

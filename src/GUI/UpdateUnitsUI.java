@@ -1,6 +1,7 @@
 package GUI;
 
 import Controller.CustomerController;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
 import lesco.bill.system.a1.pkg22l.pkg7906.Customer;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -154,18 +155,23 @@ public class UpdateUnitsUI extends JFrame {
             return;
         }
 
-        String meterType = Customer.getCustomerMeterType(customerId);
+        try {
+            String request = String.format("Customer,FETCH_INFO,%s", customerId);
+            ClientSocket client = ClientSocket.getInstance();
+            String response = client.sendRequest(request);
 
-        if (meterType == null) {
-            showMessage("Customer not found. Please check the Customer ID.", true);
-            return;
+            if (response.startsWith("Error")) {
+                showMessage(response, true);
+            } else {
+                customerMeterType = response;
+                regularUnitsField.setEnabled(true);
+                peakUnitsField.setEnabled("Three Phase".equalsIgnoreCase(customerMeterType));
+                showMessage("Customer found. Meter type: " + customerMeterType, false);
+            }
+        } catch (Exception e) {
+            showMessage("Error connecting to the server. Please try again.", true);
+            e.printStackTrace();
         }
-
-        customerMeterType = meterType;
-        regularUnitsField.setEnabled(true);
-        peakUnitsField.setEnabled("Three Phase".equalsIgnoreCase(customerMeterType));
-
-        showMessage("Customer found. Meter type: " + meterType, false);
     }
 
     private void updateUnits() {
@@ -187,22 +193,27 @@ public class UpdateUnitsUI extends JFrame {
             int regularUnitsConsumed = Integer.parseInt(regularUnits);
             int peakUnitsConsumed = peakUnitsField.isEnabled() ? Integer.parseInt(peakUnits) : 0;
 
-            boolean success = cc.UPDATE_UNIT(customerId, regularUnitsConsumed, peakUnitsConsumed);
+            String request = String.format("Customer,UPDATE_UNITS,%s,%d,%d", customerId, regularUnitsConsumed, peakUnitsConsumed);
+            ClientSocket client = ClientSocket.getInstance();
+            String response = client.sendRequest(request);
 
-            if (success) {
+            if (response.equalsIgnoreCase("Success")) {
                 showMessage("Units consumed updated successfully.", false);
             } else {
-                showMessage("Failed to update units consumed. Check Customer ID.", true);
+                showMessage(response, true);
             }
         } catch (NumberFormatException e) {
             showMessage("Please enter valid numbers for units.", true);
+        } catch (Exception e) {
+            showMessage("Error connecting to the server. Please try again.", true);
+            e.printStackTrace();
         }
     }
 
-    private void showMessage(String message, boolean isError) {
+    private void showMessage(String message, boolean isError)
+    {
         statusLabel.setText(message);
         statusLabel.setForeground(isError ? Color.RED : Color.GREEN);
     }
-
   
 }

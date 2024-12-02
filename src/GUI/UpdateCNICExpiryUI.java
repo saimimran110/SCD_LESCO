@@ -1,6 +1,8 @@
 package GUI;
 
 import Controller.CustomerController;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
+
 import javax.swing.*;
 import java.awt.*;
 
@@ -83,7 +85,6 @@ public class UpdateCNICExpiryUI extends JFrame {
         button.setFont(new Font("Arial", Font.BOLD, 14));
     }
 
-    // This method connects with the controller
     private void updateCNICExpiryDate() {
         String customerId = customerIdField.getText().trim();
         String cnic = cnicField.getText().trim();
@@ -105,15 +106,24 @@ public class UpdateCNICExpiryUI extends JFrame {
             return;
         }
 
-        // Update expiry date through controller
-        boolean success = controller.UPDATE_CNIC_EXPIRY_DATE(cnic, customerId, day, month, year);
+        try {
+            // Prepare the request string for the server
+            String request = String.format("Customer,UPDATE_CNIC_EXPIRY,%s,%s,%d,%d,%d", customerId, cnic, day, month, year);
 
-        if (success) {
-            JOptionPane.showMessageDialog(this, "CNIC Expiry Date updated successfully.", "Success", JOptionPane.INFORMATION_MESSAGE);
-        } else {
-            JOptionPane.showMessageDialog(this, "Failed to update CNIC Expiry Date.", "Error", JOptionPane.ERROR_MESSAGE);
+            ClientSocket client = ClientSocket.getInstance();
+            String response = client.sendRequest(request);
+
+            // Process the server's response
+            if (response.equalsIgnoreCase("CNIC expiry updated successfully.")) {
+                JOptionPane.showMessageDialog(this, response, "Success", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(this, response, "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to connect to the server.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-  
+
 }

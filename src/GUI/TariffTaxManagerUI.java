@@ -1,5 +1,6 @@
 package GUI;
 
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
 import lesco.bill.system.a1.pkg22l.pkg7906.TariffTaxManager;
 import javax.swing.*;
 import java.awt.*;
@@ -126,21 +127,32 @@ public class TariffTaxManagerUI extends JFrame {
         button.setForeground(Color.BLACK);
         button.setFont(new Font("Arial", Font.BOLD, 14));
     }
-
     private void updateCurrentValues() {
         String meterType = (String) meterTypeCombo.getSelectedItem();
         String customerType = (String) customerTypeCombo.getSelectedItem();
-        int row = TariffTaxManager.getRowIndex(meterType, customerType);
 
-        String currentValues = TariffTaxManager.getRowContent(row);
-        currentValuesArea.setText(currentValues);
-        String[] values = currentValues.split(",");
-        regularUnitPriceField.setText(values[1]);
-        peakHourUnitPriceField.setText(values[2]);
-        taxPercentageField.setText(values[3]);
-        fixedChargesField.setText(values[4]);
-        peakHourUnitPriceField.setEnabled(!meterType.equals("Single Phase"));
+        String request = String.format("TariffTaxManager,GET_CURRENT_VALUES,%s,%s", meterType, customerType);
+
+        try {
+            ClientSocket client = ClientSocket.getInstance();
+            String response = client.sendRequest(request);
+
+            if (response.startsWith("Error")) {
+                JOptionPane.showMessageDialog(this, response, "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                currentValuesArea.setText(response);
+                String[] values = response.split(",");
+                regularUnitPriceField.setText(values[1]);
+                peakHourUnitPriceField.setText(values[2]);
+                taxPercentageField.setText(values[3]);
+                fixedChargesField.setText(values[4]);
+                peakHourUnitPriceField.setEnabled(!meterType.equals("Single Phase"));
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error connecting to the server.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
+
 
     private void updateTariffTax() {
         String meterType = (String) meterTypeCombo.getSelectedItem();
@@ -151,20 +163,27 @@ public class TariffTaxManagerUI extends JFrame {
         String fixedCharges = fixedChargesField.getText();
 
         if (regularUnitPrice.isEmpty() || taxPercentage.isEmpty() || fixedCharges.isEmpty() ||
-            (!meterType.equals("Single Phase") && peakHourUnitPrice.isEmpty())) {
+                (!meterType.equals("Single Phase") && peakHourUnitPrice.isEmpty())) {
             JOptionPane.showMessageDialog(this, "Please fill in all fields.", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String newEntry = String.format("%s,%s,%s,%s,%s",
-                meterType, regularUnitPrice, peakHourUnitPrice, taxPercentage, fixedCharges);
+        String request = String.format("TariffTaxManager,UPDATE_TARIFF_TAX,%s,%s,%s,%s,%s,%s",
+                meterType, customerType, regularUnitPrice, peakHourUnitPrice, taxPercentage, fixedCharges);
 
-        int row = TariffTaxManager.getRowIndex(meterType, customerType);
-        TariffTaxManager.updateFileRow(row, newEntry);
+        try {
+            ClientSocket client = ClientSocket.getInstance();
+            String response = client.sendRequest(request);
 
-        JOptionPane.showMessageDialog(this, "Tariff/Tax information updated successfully!", "Success", JOptionPane.INFORMATION_MESSAGE);
-        updateCurrentValues();
+            JOptionPane.showMessageDialog(this, response, "Update Status",
+                    response.startsWith("Success") ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE);
+
+            if (response.startsWith("Success")) {
+                updateCurrentValues(); // Refresh after successful update
+            }
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "Error connecting to the server.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
     }
 
-   
 }

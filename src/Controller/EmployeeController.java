@@ -16,36 +16,36 @@ import static lesco.bill.system.a1.pkg22l.pkg7906.Employee.*;
 public class EmployeeController {
     private static final String BILLING_FILE_PATH = "BillingInfo.txt";
 
-    public boolean ADD_EMPLOYEE(String u, String p) {
+    public static boolean  ADD_EMPLOYEE(String u, String p) {
         return addEmployeeInFile(u, p);
     }
 
-    public boolean LOGIN_EMPLOYEE(String u, String p) {
+    public static boolean LOGIN_EMPLOYEE(String u, String p) {
         return employeeLogin(u, p);
     }
 
-    public boolean UPDATE_PASSWORD(String u, String p, String np) {
+    public static boolean UPDATE_PASSWORD(String u, String p, String np) {
         return updatePassword(u, p, np);
     }
 
-    public boolean UPDATE_BILLING_STATUS(String id) {
+    public static boolean UPDATE_BILLING_STATUS(String id) {
         return UpdateTheBillStatusAfterBilling(id);
     }
 
-   public boolean GENERATE_BILL(String id) {
+   public static boolean GENERATE_BILL(String id) {
     return GenerateElectricityBillForCustomer(id);
 }
 
-    public ArrayList<Customer> VIEW_EXPIRING_CNIC() {
+    public static ArrayList<Customer> VIEW_EXPIRING_CNIC() {
         return viewExpiringCNICs();
     }
 
-    public ArrayList<BillingInfo> VIEW_PAID_UNPAID_BILLS(String customerId) {
+    public static ArrayList<BillingInfo> VIEW_PAID_UNPAID_BILLS(String customerId) {
         return Employee.viewPaidAndUnpaidBills(customerId);
     }
 
     // Method to remove the latest bill from the BillingInfo.txt file for a specific customer
-   public boolean RemoveBill(String readingDate) {
+   public static boolean RemoveBill(String readingDate) {
         String FILE = "BillingInfo.txt";
         StringBuilder newFileContent = new StringBuilder();
 

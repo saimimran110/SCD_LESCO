@@ -1,10 +1,13 @@
 package GUI;
 
 import Controller.EmployeeController;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.IOException;
 
 public class UpdateBillStatusUI extends JFrame {
     EmployeeController ec;
@@ -52,18 +55,33 @@ public class UpdateBillStatusUI extends JFrame {
         updateButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String customerId = customerIdField.getText();
-                
-                    if(ec.UPDATE_BILLING_STATUS(customerId)&&!customerId.isEmpty())
-                    {JOptionPane.showMessageDialog(UpdateBillStatusUI.this, "Status Of bill for ID: " + customerId + " Converted to PAID");
-                    dispose();
-   
-                    
-                } else {
+                String customerId = customerIdField.getText().trim();
+
+                if (customerId.isEmpty()) {
                     JOptionPane.showMessageDialog(UpdateBillStatusUI.this, "Please enter a valid Customer ID.");
+                    return;
+                }
+
+                try {
+                    // Send the update request to the server
+                    String request = "Employee,UPDATE_BILL_STATUS," + customerId;
+                    ClientSocket client = ClientSocket.getInstance();
+                    String response = client.sendRequest(request);
+
+                    // Process the server response
+                    if (response.startsWith("Success")) {
+                        JOptionPane.showMessageDialog(UpdateBillStatusUI.this, response);
+                        dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(UpdateBillStatusUI.this, response, "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (IOException | ClassNotFoundException ex) {
+                    JOptionPane.showMessageDialog(UpdateBillStatusUI.this, "Error connecting to the server. Please try again.", "Connection Error", JOptionPane.ERROR_MESSAGE);
+                    ex.printStackTrace();
                 }
             }
         });
+
 
         // Add main panel to the frame
         add(mainPanel);

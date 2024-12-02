@@ -1,6 +1,8 @@
 package GUI;
 
 import Controller.EmployeeController;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -52,52 +54,63 @@ public class GenerateBillUI extends JFrame {
         generateBillButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                String customerId = customerIdField.getText();
+                String customerId = customerIdField.getText().trim();
 
                 if (!customerId.isEmpty()) {
                     // Run the bill generation in the background using SwingWorker
-                    SwingWorker<Boolean, Void> worker = new SwingWorker<Boolean, Void>() {
+                    SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
                         @Override
-                        protected Boolean doInBackground() throws Exception {
+                        protected Void doInBackground() throws Exception {
                             // Show the loading screen
                             loading loadingScreen = new loading("Generating Bill...");
 
                             try {
-                                // Simulate loading (you can adjust this delay or remove it)
-                                Thread.sleep(3000); // 3-second simulated delay
+                                // Send the request to the server
+                                String request = String.format("Employee,GENERATE_BILL,%s", customerId);
+                                ClientSocket client = ClientSocket.getInstance();
+                                String response = client.sendRequest(request);
 
-                                // Call the method to generate the bill
-                                return ec.GENERATE_BILL(customerId);
+                                // Simulate loading for UI purposes (adjust delay if necessary)
+                                Thread.sleep(1500);
+
+                                // Process the server response
+                                SwingUtilities.invokeLater(() -> {
+                                    if ("Bill generated successfully.".equalsIgnoreCase(response)) {
+                                        JOptionPane.showMessageDialog(
+                                                GenerateBillUI.this,
+                                                "Bill generated successfully for ID: " + customerId,
+                                                "Success",
+                                                JOptionPane.INFORMATION_MESSAGE
+                                        );
+                                    } else {
+                                        JOptionPane.showMessageDialog(
+                                                GenerateBillUI.this,
+                                                response,
+                                                "Error",
+                                                JOptionPane.ERROR_MESSAGE
+                                        );
+                                    }
+                                });
                             } finally {
                                 // Ensure the loading screen is closed
                                 loadingScreen.dispose();
                             }
-                        }
-
-                        @Override
-                        protected void done() {
-                            try {
-                                // Get the result from doInBackground
-                                boolean isBillGenerated = get();
-
-                                if (isBillGenerated) {
-                                    JOptionPane.showMessageDialog(GenerateBillUI.this, "Bill generated successfully for ID: " + customerId);
-                                } else {
-                                    JOptionPane.showMessageDialog(GenerateBillUI.this, "Please enter a valid Customer ID");
-                                }
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
-                                JOptionPane.showMessageDialog(GenerateBillUI.this, "An error occurred while generating the bill.");
-                            }
+                            return null;
                         }
                     };
 
                     worker.execute();  // Start the background task
                 } else {
-                    JOptionPane.showMessageDialog(GenerateBillUI.this, "Please enter a valid Customer ID.");
+                    JOptionPane.showMessageDialog(
+                            GenerateBillUI.this,
+                            "Please enter a valid Customer ID.",
+                            "Validation Error",
+                            JOptionPane.WARNING_MESSAGE
+                    );
                 }
             }
         });
+
 
         // Add main panel to the frame
         add(mainPanel);

@@ -1,6 +1,8 @@
 package GUI;
 
 import Controller.CustomerController;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -135,21 +137,33 @@ public class CustomerLogin extends JFrame {
         loginButton.setFont(new Font("Arial", Font.BOLD, 22));
         formPanel.add(loginButton, gbc);
 
-        // ActionListener for the login button
         loginButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String id = customerIdField.getText();
                 String cnic = cnicField.getText().replaceAll("-", ""); // Remove dashes before using the input
 
-                if (cc.CUSTOMER_LOGIN(id, cnic)) {
-                    JOptionPane.showMessageDialog(null, "Customer Logged in Successfully!!\n");
-                    dispose();
-                    new CustomerDashboardGUI(cc.GIVE_NAME_OF_CUSTOMER(id));
-                } else {
-                    JOptionPane.showMessageDialog(null, "Invalid Id or CNIC");
+                if (id.isEmpty() || cnic.isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Please fill in both Customer ID and CNIC.", "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
                 }
 
+                try {
+                    String request = String.format("Customer,CUSTOMER_LOGIN,%s,%s", id, cnic);
+                    ClientSocket client = ClientSocket.getInstance(); // Get singleton instance
+                    String response = client.sendRequest(request);    // Send request and get response
+
+                    // Process the server response
+                    if (response.startsWith("Login successful")) {
+                        JOptionPane.showMessageDialog(null, "Customer Logged in Successfully!!\n");
+                        dispose();
+                        new CustomerDashboardGUI(response.split(",")[1]); // Assuming server sends the name with the success message
+                    } else {
+                        JOptionPane.showMessageDialog(null, response, "Login Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(CustomerLogin.this, "Error connecting to the server.", "Connection Error", JOptionPane.ERROR_MESSAGE);
+                }
             }
         });
 

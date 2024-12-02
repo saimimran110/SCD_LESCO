@@ -1,1 +1,3 @@
-1234,5440070637191,Saim Imran,Lahore,03332306481,Commercial,Three Phase,26-11-2024,50,10
+4774,5440070637191,Saim imran,Lake city,03332306480,Commercial,Single Phase,02-12-2024,0,0
+1234,5440070637191,Saim imran,Lake city,03332306480,Commercial,Single Phase,02-12-2024,0,0
+2455,5440070637191,Saim imran,Lake city,03332306480,Commercial,Single Phase,02-12-2024,0,0

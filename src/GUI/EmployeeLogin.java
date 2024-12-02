@@ -104,7 +104,7 @@ public class EmployeeLogin extends JFrame {
 
                 try {
                     // Send login request to server
-                    String request = "Employee,LOGIN," + username + "," + password;
+                    String request = "Employee,EMPLOYEE_LOGIN," + username + "," + password;
                     ClientSocket client = ClientSocket.getInstance(); // Get singleton instance
                     String response = client.sendRequest(request); // Send request and get response
 

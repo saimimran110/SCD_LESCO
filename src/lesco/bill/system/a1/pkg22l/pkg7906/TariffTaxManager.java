@@ -48,7 +48,6 @@ public class TariffTaxManager {
     public static void updateTariffTaxInfo() {
         Scanner scanner = new Scanner(System.in);
 
-        // Ensure file has exactly 4 rows
         ensureFourRows();
 
         // Prompt user for input

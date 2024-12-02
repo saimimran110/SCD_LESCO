@@ -1,4 +1,4 @@
-Single Phase,5,,17,150
+Single Phase,15,,17,8
 Single Phase,15,,20,250
 Three Phase,60,55,2,5
 Three Phase,43,90,31,100

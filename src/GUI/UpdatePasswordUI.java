@@ -1,6 +1,8 @@
 package GUI;
 
 import Controller.EmployeeController;
+import lesco.bill.system.a1.pkg22l.pkg7906.ClientSocket;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -14,7 +16,7 @@ public class UpdatePasswordUI extends JFrame {
     private EmployeeController ec;
    
     public UpdatePasswordUI() {
-        ec= new EmployeeController();
+        ec = new EmployeeController();
         setTitle("Update Password");
         setSize(600, 400); // Increased window size
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Close only this window
@@ -100,18 +102,29 @@ public class UpdatePasswordUI extends JFrame {
             return;
         }
 
-        // Call the backend method to update the password
-        if(ec.UPDATE_PASSWORD(username,currentPassword,newPassword))
-        {
-       showPasswordChangedPopup(username,currentPassword,newPassword);
-          dispose();
-         
-        }
-        else{
-         JOptionPane.showMessageDialog(null, "Error in changing password!");
+        try {
+            // Prepare the request string for the server
+            String request = String.format("Employee,UPDATE_PASSWORD,%s,%s,%s", username, currentPassword, newPassword);
+
+            ClientSocket client = ClientSocket.getInstance();
+            String response = client.sendRequest(request);
+
+            // Process the server's response
+            if (response.equalsIgnoreCase("Password updated successfully.")) {
+                showPasswordChangedPopup(username, currentPassword, newPassword);
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, response, "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            JOptionPane.showMessageDialog(this, "Failed to connect to the server.", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
-     private void showPasswordChangedPopup(String username, String newPassword, String newPassword1) {
+
+
+    private void showPasswordChangedPopup(String username, String newPassword, String newPassword1)
+    {
     JDialog popup = new JDialog(this, "Password Updated", true);
     popup.setSize(400, 200);
     popup.setLocationRelativeTo(this);
